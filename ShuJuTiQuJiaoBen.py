@@ -2967,15 +2967,16 @@ HTML_PAGE = r"""<!doctype html>
     }
     .task-panel .checks label { min-width: 0; }
     .cloud-actions {
-      display: flex;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
       align-items: center;
-      justify-content: space-between;
-      gap: 12px;
+      gap: 8px 10px;
       margin-top: 12px;
     }
     .cloud-actions .checks { margin-top: 0; }
-    .cloud-actions button { flex: 0 0 auto; }
-    .cloud-actions .checks label { line-height: 1.25; }
+    .cloud-actions .checks label { line-height: 1.2; }
+    .cloud-actions #refreshModelsBtn { justify-self: end; }
+    .cloud-actions #saveConfigBtn { grid-column: 1 / -1; justify-self: start; }
     button {
       border: 1px solid var(--line);
       background: #fff;
@@ -2999,19 +3000,21 @@ HTML_PAGE = r"""<!doctype html>
     .task-panel .actions { gap: 8px; margin-top: 8px; }
     .task-panel .action-row { gap: 8px; }
     .task-panel .action-row + .action-row { margin-top: 6px; }
-    table { width: 100%; min-width: 1080px; table-layout: fixed; border-collapse: collapse; font-size: 13px; }
-    .field-name-col { width: 28%; }
-    .requirement-col { width: 7%; }
-    .field-desc-col { width: 56%; }
-    .move-col { width: 6%; }
-    .remove-col { width: 3%; }
+    table { width: 100%; min-width: 1180px; table-layout: fixed; border-collapse: collapse; font-size: 13px; }
+    .field-name-col { width: 24%; }
+    .requirement-col { width: 100px; }
+    .field-desc-col { width: auto; }
+    .move-col { width: 140px; }
+    .remove-col { width: 68px; }
     th, td { border-bottom: 1px solid var(--line); padding: 8px 6px; vertical-align: top; }
     th { text-align: left; color: var(--muted); font-weight: 650; background: var(--panel-soft); }
     td.requirement { width: 96px; }
-    td.move { width: 86px; white-space: nowrap; text-align: center; }
-    td.remove { width: 48px; text-align: right; }
+    td.move { width: 140px; white-space: nowrap; text-align: center; }
+    td.remove { width: 68px; text-align: right; }
     .field-input { padding: 7px; }
-    .mini-btn { padding: 6px 8px; min-width: 34px; }
+    .mini-btn { padding: 6px 8px; min-width: 52px; }
+    .mini-btn + .mini-btn { margin-left: 4px; }
+    td.remove button { min-width: 50px; padding-left: 8px; padding-right: 8px; }
     .progress-wrap { height: 14px; background: #e4e9f1; border-radius: 999px; overflow: hidden; border: 1px solid #d4dce8; }
     .progress-bar { height: 100%; width: 0%; background: var(--blue); transition: width .25s ease; }
     .stats {
@@ -3184,8 +3187,8 @@ HTML_PAGE = r"""<!doctype html>
             <div class="checks">
               <label><input id="cloudActive" type="checkbox" /> <span data-i18n="cloud_active">激活此配置（云端模式必须勾选）</span></label>
             </div>
-            <button type="button" onclick="saveLocalConfig()" data-i18n="save_local_config">保存本地配置</button>
-            <button type="button" onclick="loadModels()" data-i18n="refresh_models">刷新模型</button>
+            <button id="refreshModelsBtn" type="button" onclick="loadModels()" data-i18n="refresh_models">刷新模型</button>
+            <button id="saveConfigBtn" type="button" onclick="saveLocalConfig()" data-i18n="save_local_config">保存本地配置</button>
           </div>
           <p class="small" data-i18n="api_help">兼容 SiliconFlow、DeepSeek、OpenRouter 等 OpenAI-compatible 接口。仓库不内置真实 Key；可在页面填写并保存到本地 config.local.json，运行日志和 Excel 不记录 Key。</p>
         </section>
@@ -3269,7 +3272,7 @@ HTML_PAGE = r"""<!doctype html>
         placeholder_service: "例如：silicon / deepseek / openrouter",
         model_name: "模型名称",
         load_cloud_models: "读取云端模型",
-        cloud_active: "激活此配置（云端模式必须勾选）",
+        cloud_active: "激活此配置",
         save_local_config: "保存本地配置",
         refresh_models: "刷新模型",
         api_help: "兼容 SiliconFlow、DeepSeek、OpenRouter 等 OpenAI-compatible 接口。仓库不内置真实 Key；可在页面填写并保存到本地 config.local.json，运行日志和 Excel 不记录 Key。",
@@ -3342,8 +3345,8 @@ HTML_PAGE = r"""<!doctype html>
         placeholder_service: "e.g. silicon / deepseek / openrouter",
         model_name: "Model Name",
         load_cloud_models: "Load Cloud Models",
-        cloud_active: "Activate this config (required for cloud mode)",
-        save_local_config: "Save Local Config",
+        cloud_active: "Active",
+        save_local_config: "Save Config",
         refresh_models: "Refresh Models",
         api_help: "Compatible with SiliconFlow, DeepSeek, OpenRouter and other OpenAI-compatible APIs. The repository contains no real Key; you can enter and save it locally to config.local.json. Logs and Excel never record the Key.",
         progress: "Progress",
@@ -3391,6 +3394,25 @@ HTML_PAGE = r"""<!doctype html>
 
     function t(key) {
       return (i18n[currentLang] && i18n[currentLang][key]) || i18n.zh[key] || key;
+    }
+
+    function localizedStatusMessage(message) {
+      if (!message) return t("status_waiting");
+      if (currentLang !== "en") return message;
+      const exact = {
+        "等待任务": "Waiting",
+        "任务启动中": "Starting",
+        "已继续处理": "Resumed",
+        "已暂停，点击继续后从当前进度接着处理": "Paused. Click Resume to continue from current progress.",
+        "已扫描 PDF 文件": "PDF files scanned",
+        "任务完成": "Task complete",
+        "正在请求停止，当前文件结束后停止": "Stopping after the current file finishes",
+        "正在请求暂停，当前文件结束后暂停": "Pausing after the current file finishes"
+      };
+      if (exact[message]) return exact[message];
+      if (message.startsWith("处理中：")) return "Processing: " + message.slice("处理中：".length);
+      if (message.startsWith("任务异常：")) return "Task error: " + message.slice("任务异常：".length);
+      return message;
     }
 
     function applyFieldLanguage() {
@@ -3651,7 +3673,7 @@ HTML_PAGE = r"""<!doctype html>
         document.getElementById("total").textContent = data.total || 0;
         document.getElementById("success").textContent = data.success || 0;
         document.getElementById("failed").textContent = data.failed || 0;
-        document.getElementById("message").textContent = data.message || t("status_waiting");
+        document.getElementById("message").textContent = localizedStatusMessage(data.message);
         document.getElementById("currentFile").textContent = data.current_file ? t("prefix_current_file") + data.current_file : "";
         document.getElementById("outputInfo").textContent = data.output_path ? t("prefix_output") + data.output_path + " | " + t("prefix_error_log") + data.error_log_path : "";
         document.getElementById("logs").textContent = (data.logs || []).join("\n");
