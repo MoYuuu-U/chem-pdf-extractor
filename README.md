@@ -75,7 +75,9 @@ The example data is synthetic and does not represent real published papers.
 
 ## Screenshots
 
-Screenshots will be added in `docs/screenshots/` to show the web interface and example Excel output.
+The current web interface screenshot is shown below. An Excel output screenshot will be added later.
+
+![Web UI](docs/screenshots/web-ui.png)
 
 ## Limitations
 
@@ -152,7 +154,9 @@ python ShuJuTiQuJiaoBen.py
 
 ## 截图
 
-后续将在 `docs/screenshots/` 中补充网页界面和 Excel 输出示例截图。
+当前网页界面截图如下。Excel 输出示例截图后续补充。
+
+![网页界面](docs/screenshots/web-ui.png)
 
 ## 注意事项
 
@@ -163,3 +167,5 @@ python ShuJuTiQuJiaoBen.py
 - 云端 API 可能产生费用。
 - 扫描版 PDF 和复杂双栏论文的解析效果取决于 PDF 转换/OCR 工具。
 - 示例数据是合成数据，不代表真实发表论文结果。
+
+
