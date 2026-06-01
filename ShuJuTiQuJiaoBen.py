@@ -2814,6 +2814,16 @@ HTML_PAGE = r"""<!doctype html>
       font-weight: 800;
       line-height: 1;
     }
+    .app-header {
+      flex: 0 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      min-height: 48px;
+      padding: 0 4px;
+    }
+    .app-header .app-logo { min-height: 0; padding: 0; }
     .app-logo::before {
       content: "";
       width: 10px;
@@ -2821,6 +2831,30 @@ HTML_PAGE = r"""<!doctype html>
       border-radius: 999px;
       background: var(--blue);
       flex: 0 0 auto;
+    }
+    .lang-switch {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--panel);
+      flex: 0 0 auto;
+    }
+    .lang-switch button {
+      min-height: 28px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      border-color: transparent;
+      background: transparent;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .lang-switch button.active {
+      background: var(--blue);
+      color: #fff;
+      border-color: var(--blue);
     }
     section {
       background: var(--panel);
@@ -2853,6 +2887,7 @@ HTML_PAGE = r"""<!doctype html>
       min-height: 0;
       min-width: 0;
       overflow: hidden;
+      padding: 12px 14px;
     }
     .task-panel > .small { margin-top: auto; }
     .api-panel, .progress-panel { min-height: 0; min-width: 0; }
@@ -2884,6 +2919,16 @@ HTML_PAGE = r"""<!doctype html>
     .top-grid h2 { font-size: 18px; }
     .top-grid label { font-size: 13px; }
     .top-grid input, .top-grid select, .top-grid button { font-size: 15px; }
+    .task-panel h2 { margin-bottom: 8px; font-size: 17px; }
+    .task-panel label { margin: 5px 0 3px; line-height: 1.15; }
+    .task-panel input, .task-panel select {
+      min-height: 30px;
+      padding: 5px 9px;
+    }
+    .task-panel button {
+      min-height: 31px;
+      padding: 5px 12px;
+    }
     label { display: block; font-size: 12px; color: var(--muted); margin: 8px 0 5px; font-weight: 650; }
     input, select, textarea {
       width: 100%;
@@ -2905,10 +2950,22 @@ HTML_PAGE = r"""<!doctype html>
     .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
     .row > div { display: flex; flex-direction: column; }
     .row > div > label { height: 42px; display: flex; align-items: flex-end; line-height: 1.25; }
+    .task-panel .row { gap: 8px; }
+    .task-panel .row > div > label {
+      height: 31px;
+      line-height: 1.15;
+    }
     .inline-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: center; }
     .checks { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 10px; color: var(--muted); font-size: 13px; }
     .checks label { display: inline-flex; align-items: center; gap: 6px; margin: 0; }
     .checks input { width: auto; }
+    .task-panel .checks {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px 12px;
+      margin-top: 8px;
+    }
+    .task-panel .checks label { min-width: 0; }
     .cloud-actions {
       display: flex;
       align-items: center;
@@ -2918,6 +2975,7 @@ HTML_PAGE = r"""<!doctype html>
     }
     .cloud-actions .checks { margin-top: 0; }
     .cloud-actions button { flex: 0 0 auto; }
+    .cloud-actions .checks label { line-height: 1.25; }
     button {
       border: 1px solid var(--line);
       background: #fff;
@@ -2938,6 +2996,9 @@ HTML_PAGE = r"""<!doctype html>
     .actions { display: flex; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
     .action-row { display: flex; gap: 10px; flex-wrap: wrap; }
     .action-row + .action-row { margin-top: 8px; }
+    .task-panel .actions { gap: 8px; margin-top: 8px; }
+    .task-panel .action-row { gap: 8px; }
+    .task-panel .action-row + .action-row { margin-top: 6px; }
     table { width: 100%; min-width: 1080px; table-layout: fixed; border-collapse: collapse; font-size: 13px; }
     .field-name-col { width: 28%; }
     .requirement-col { width: 7%; }
@@ -3021,6 +3082,7 @@ HTML_PAGE = r"""<!doctype html>
       body { overflow-x: auto; }
       main { overflow-x: visible; }
       .top-grid { grid-template-columns: 1fr; height: auto; min-height: 0; overflow: visible; }
+      .app-header { flex-wrap: wrap; }
       .stats { grid-template-columns: repeat(2, 1fr); }
     }
   </style>
@@ -3029,37 +3091,43 @@ HTML_PAGE = r"""<!doctype html>
   <main>
     <div class="top-grid">
       <div class="left-stack">
-        <div class="app-logo">Chem-PDF-Extractor</div>
+        <div class="app-header">
+          <div class="app-logo">Chem-PDF-Extractor</div>
+          <div class="lang-switch" aria-label="Language switch">
+            <button type="button" id="langZh" onclick="setLanguage('zh')">中文</button>
+            <button type="button" id="langEn" onclick="setLanguage('en')">EN</button>
+          </div>
+        </div>
         <section class="task-panel">
-          <h2>任务设置</h2>
-          <label>PDF 输入目录</label>
+          <h2 data-i18n="task_settings">任务设置</h2>
+          <label data-i18n="input_dir">PDF 输入目录</label>
           <input id="inputDir" />
-          <label>Excel 输出路径</label>
+          <label data-i18n="output_path">Excel 输出路径</label>
           <input id="outputPath" />
-          <label>LLM 提供方</label>
+          <label data-i18n="llm_provider">LLM 提供方</label>
           <select id="llmProvider" onchange="onProviderChange()">
-            <option value="cloud">云端 OpenAI-compatible API</option>
-            <option value="ollama">本地 Ollama</option>
+            <option value="cloud" data-i18n="provider_cloud">云端 OpenAI-compatible API</option>
+            <option value="ollama" data-i18n="provider_ollama">本地 Ollama</option>
           </select>
           <div class="row">
             <div>
-              <label>本地 Ollama 模型</label>
+              <label data-i18n="local_ollama_model">本地 Ollama 模型</label>
               <select id="model"></select>
             </div>
             <div>
-              <label>PDF 到 Markdown / 文本方式</label>
+              <label data-i18n="pdf_mode">PDF 到 Markdown / 文本方式</label>
               <select id="pdfMode">
-                <option value="mineru">MinerU pipeline Markdown（推荐：质量优先）</option>
-                <option value="auto">自动选择（先快后精）</option>
-                <option value="pymupdf4llm">pymupdf4llm 高保真 Markdown</option>
-                <option value="pymupdf_text">PyMuPDF 普通文本</option>
-                <option value="pypdf_text">pypdf 普通文本</option>
+                <option value="mineru" data-i18n="pdf_mode_mineru">MinerU pipeline Markdown（推荐：质量优先）</option>
+                <option value="auto" data-i18n="pdf_mode_auto">自动选择（先快后精）</option>
+                <option value="pymupdf4llm" data-i18n="pdf_mode_pymupdf4llm">pymupdf4llm 高保真 Markdown</option>
+                <option value="pymupdf_text" data-i18n="pdf_mode_pymupdf_text">PyMuPDF 普通文本</option>
+                <option value="pypdf_text" data-i18n="pdf_mode_pypdf_text">pypdf 普通文本</option>
               </select>
             </div>
           </div>
           <div class="row">
             <div>
-              <label>上传最大字符数（0 表示不截断）</label>
+              <label data-i18n="max_chars">上传最大字符数（0 表示不截断）</label>
               <input id="maxChars" type="number" value="0" min="0" />
             </div>
             <div>
@@ -3069,28 +3137,28 @@ HTML_PAGE = r"""<!doctype html>
           </div>
           <div class="row">
             <div>
-              <label>LLM 超时秒数（0 表示不限制）</label>
+              <label data-i18n="llm_timeout">LLM 超时秒数（0 表示不限制）</label>
               <input id="llmTimeout" type="number" value="0" min="0" />
             </div>
             <div>
-              <label>错误百分比（低于此百分比判为坏数据）</label>
+              <label data-i18n="bad_row_percent">错误百分比（低于此百分比判为坏数据）</label>
               <input id="badRowMinFillPercent" type="number" value="40" min="0" max="100" step="1" />
             </div>
           </div>
-          <label>Ollama 地址</label>
+          <label data-i18n="ollama_url">Ollama 地址</label>
           <input id="ollamaBaseUrl" value="http://127.0.0.1:11434" />
           <div class="checks">
-            <label><input id="recursive" type="checkbox" /> 递归处理子文件夹</label>
-            <label><input id="autoFallback" type="checkbox" /> 模型失败时尝试备选模型</label>
+            <label><input id="recursive" type="checkbox" /> <span data-i18n="recursive">递归处理子文件夹</span></label>
+            <label><input id="autoFallback" type="checkbox" /> <span data-i18n="auto_fallback">模型失败时尝试备选模型</span></label>
           </div>
           <div class="actions">
             <div class="action-row">
-              <button class="primary" id="startBtn" onclick="startJob()">开始处理</button>
+              <button class="primary" id="startBtn" onclick="startJob()" data-i18n="start">开始处理</button>
             </div>
             <div class="action-row">
-              <button id="pauseBtn" onclick="pauseJob()">暂停任务</button>
-              <button id="resumeBtn" onclick="resumeJob()">继续任务</button>
-              <button class="danger" id="stopBtn" onclick="stopJob()">停止任务</button>
+              <button id="pauseBtn" onclick="pauseJob()" data-i18n="pause">暂停任务</button>
+              <button id="resumeBtn" onclick="resumeJob()" data-i18n="resume">继续任务</button>
+              <button class="danger" id="stopBtn" onclick="stopJob()" data-i18n="stop">停止任务</button>
             </div>
           </div>
         </section>
@@ -3098,15 +3166,15 @@ HTML_PAGE = r"""<!doctype html>
 
       <div class="config-stack">
         <section id="cloudPanel" class="api-panel" style="display:none;">
-          <h2>编辑 LLM API 配置</h2>
-          <label>LLM 服务名称 <span style="color:#d92d20">*</span></label>
-          <input id="cloudServiceName" placeholder="例如：silicon / deepseek / openrouter" />
-          <label>模型名称</label>
+          <h2 data-i18n="api_config">编辑 LLM API 配置</h2>
+          <label><span data-i18n="service_name">LLM 服务名称</span> <span style="color:#d92d20">*</span></label>
+          <input id="cloudServiceName" placeholder="例如：silicon / deepseek / openrouter" data-i18n-placeholder="placeholder_service" />
+          <label data-i18n="model_name">模型名称</label>
           <div class="inline-row">
             <select id="cloudModel">
               __DEFAULT_CLOUD_MODEL_OPTIONS__
             </select>
-            <button type="button" onclick="loadCloudModels()">读取云端模型</button>
+            <button type="button" onclick="loadCloudModels()" data-i18n="load_cloud_models">读取云端模型</button>
           </div>
           <label>LLM API KEY</label>
           <input id="cloudApiKey" type="password" autocomplete="off" placeholder="YOUR_API_KEY_HERE" />
@@ -3114,25 +3182,25 @@ HTML_PAGE = r"""<!doctype html>
           <input id="cloudBaseUrl" placeholder="https://api.siliconflow.cn/v1" />
           <div class="cloud-actions">
             <div class="checks">
-              <label><input id="cloudActive" type="checkbox" /> 激活此配置（云端模式必须勾选）</label>
+              <label><input id="cloudActive" type="checkbox" /> <span data-i18n="cloud_active">激活此配置（云端模式必须勾选）</span></label>
             </div>
-            <button type="button" onclick="saveLocalConfig()">保存本地配置</button>
-            <button type="button" onclick="loadModels()">刷新模型</button>
+            <button type="button" onclick="saveLocalConfig()" data-i18n="save_local_config">保存本地配置</button>
+            <button type="button" onclick="loadModels()" data-i18n="refresh_models">刷新模型</button>
           </div>
-          <p class="small">兼容 SiliconFlow、DeepSeek、OpenRouter 等 OpenAI-compatible 接口。仓库不内置真实 Key；可在页面填写并保存到本地 config.local.json，运行日志和 Excel 不记录 Key。</p>
+          <p class="small" data-i18n="api_help">兼容 SiliconFlow、DeepSeek、OpenRouter 等 OpenAI-compatible 接口。仓库不内置真实 Key；可在页面填写并保存到本地 config.local.json，运行日志和 Excel 不记录 Key。</p>
         </section>
 
         <section class="progress-panel">
-          <h2>进度</h2>
+          <h2 data-i18n="progress">进度</h2>
           <div class="progress-wrap"><div id="progressBar" class="progress-bar"></div></div>
           <div class="stats">
-            <div class="stat"><b id="done">0</b><span>已处理</span></div>
-            <div class="stat"><b id="total">0</b><span>总数</span></div>
-            <div class="stat"><b id="success">0</b><span>成功</span></div>
-            <div class="stat"><b id="failed">0</b><span>失败</span></div>
+            <div class="stat"><b id="done">0</b><span data-i18n="stat_done">已处理</span></div>
+            <div class="stat"><b id="total">0</b><span data-i18n="stat_total">总数</span></div>
+            <div class="stat"><b id="success">0</b><span data-i18n="stat_success">成功</span></div>
+            <div class="stat"><b id="failed">0</b><span data-i18n="stat_failed">失败</span></div>
           </div>
           <div class="status-box">
-            <div id="message" class="status-line">等待任务</div>
+            <div id="message" class="status-line" data-i18n="status_waiting">等待任务</div>
             <div id="currentFile" class="status-line"></div>
             <div id="outputInfo" class="status-line"></div>
           </div>
@@ -3140,13 +3208,13 @@ HTML_PAGE = r"""<!doctype html>
       </div>
 
         <section class="log-panel">
-          <h2>运行日志</h2>
+          <h2 data-i18n="logs">运行日志</h2>
           <pre id="logs"></pre>
         </section>
     </div>
 
         <section class="fields-panel">
-          <h2>抽取字段</h2>
+          <h2 data-i18n="fields">抽取字段</h2>
           <table>
             <colgroup>
               <col class="field-name-col" />
@@ -3156,39 +3224,235 @@ HTML_PAGE = r"""<!doctype html>
               <col class="remove-col" />
             </colgroup>
             <thead>
-              <tr><th>字段名</th><th class="requirement">要求</th><th>字段说明</th><th class="move">排序</th><th class="remove"></th></tr>
+              <tr><th data-i18n="field_name">字段名</th><th class="requirement" data-i18n="requirement">要求</th><th data-i18n="field_desc">字段说明</th><th class="move" data-i18n="sort">排序</th><th class="remove"></th></tr>
             </thead>
             <tbody id="fieldsBody"></tbody>
           </table>
           <div class="actions">
-            <button onclick="addField()">添加字段</button>
-            <button onclick="resetFields()">恢复默认字段</button>
+            <button onclick="addField()" data-i18n="add_field">添加字段</button>
+            <button onclick="resetFields()" data-i18n="reset_fields">恢复默认字段</button>
           </div>
-          <p class="small">说明：后台会根据字段名和说明自动判断输出格式；必填字段会要求 AI 优先检索并尽最大努力抽取。</p>
+          <p class="small" data-i18n="fields_help">说明：后台会根据字段名和说明自动判断输出格式；必填字段会要求 AI 优先检索并尽最大努力抽取。</p>
         </section>
   </main>
 
   <script>
     const defaultFields = __DEFAULT_FIELDS_JSON__;
     const defaults = __DEFAULT_CONFIG_JSON__;
+    const i18n = {
+      zh: {
+        task_settings: "任务设置",
+        input_dir: "PDF 输入目录",
+        output_path: "Excel 输出路径",
+        llm_provider: "LLM 提供方",
+        provider_cloud: "云端 OpenAI-compatible API",
+        provider_ollama: "本地 Ollama",
+        local_ollama_model: "本地 Ollama 模型",
+        pdf_mode: "PDF 到 Markdown / 文本方式",
+        pdf_mode_mineru: "MinerU pipeline Markdown（推荐：质量优先）",
+        pdf_mode_auto: "自动选择（先快后精）",
+        pdf_mode_pymupdf4llm: "pymupdf4llm 高保真 Markdown",
+        pdf_mode_pymupdf_text: "PyMuPDF 普通文本",
+        pdf_mode_pypdf_text: "pypdf 普通文本",
+        max_chars: "上传最大字符数（0 表示不截断）",
+        llm_timeout: "LLM 超时秒数（0 表示不限制）",
+        bad_row_percent: "错误百分比（低于此百分比判为坏数据）",
+        ollama_url: "Ollama 地址",
+        recursive: "递归处理子文件夹",
+        auto_fallback: "模型失败时尝试备选模型",
+        start: "开始处理",
+        pause: "暂停任务",
+        resume: "继续任务",
+        stop: "停止任务",
+        api_config: "编辑 LLM API 配置",
+        service_name: "LLM 服务名称",
+        placeholder_service: "例如：silicon / deepseek / openrouter",
+        model_name: "模型名称",
+        load_cloud_models: "读取云端模型",
+        cloud_active: "激活此配置（云端模式必须勾选）",
+        save_local_config: "保存本地配置",
+        refresh_models: "刷新模型",
+        api_help: "兼容 SiliconFlow、DeepSeek、OpenRouter 等 OpenAI-compatible 接口。仓库不内置真实 Key；可在页面填写并保存到本地 config.local.json，运行日志和 Excel 不记录 Key。",
+        progress: "进度",
+        stat_done: "已处理",
+        stat_total: "总数",
+        stat_success: "成功",
+        stat_failed: "失败",
+        status_waiting: "等待任务",
+        logs: "运行日志",
+        fields: "抽取字段",
+        field_name: "字段名",
+        requirement: "要求",
+        field_desc: "字段说明",
+        sort: "排序",
+        add_field: "添加字段",
+        reset_fields: "恢复默认字段",
+        fields_help: "说明：后台会根据字段名和说明自动判断输出格式；必填字段会要求 AI 优先检索并尽最大努力抽取。",
+        placeholder_field_label: "例如：催化剂",
+        placeholder_field_desc: "告诉模型这个字段要提取什么",
+        req_required: "必填",
+        req_recommended: "建议",
+        req_optional: "选填",
+        move_up: "上",
+        move_down: "下",
+        remove: "删",
+        error_model_read: "模型读取失败",
+        error_ollama_read: "无法读取 Ollama 模型：",
+        alert_fill_cloud: "请先填写 LLM BASE URL 和 LLM API KEY。",
+        error_cloud_read: "云端模型读取失败",
+        alert_cloud_read_done: "已读取云端模型：",
+        alert_cloud_read_unit: " 个。",
+        alert_cloud_read_failed: "无法读取云端模型：",
+        error_save_failed: "保存失败",
+        alert_config_saved: "已保存到本地 config.local.json。该文件已加入 .gitignore，不应上传 GitHub。",
+        alert_config_save_failed: "本地配置保存失败：",
+        alert_cloud_active: "请先勾选“激活此配置”，再使用云端 API。",
+        alert_start_failed: "启动失败",
+        prefix_current_file: "当前文件：",
+        prefix_output: "输出：",
+        prefix_error_log: "错误日志：",
+        error_local_service: "无法连接本地服务。"
+      },
+      en: {
+        task_settings: "Task Settings",
+        input_dir: "PDF Input Folder",
+        output_path: "Excel Output Path",
+        llm_provider: "LLM Provider",
+        provider_cloud: "Cloud OpenAI-compatible API",
+        provider_ollama: "Local Ollama",
+        local_ollama_model: "Local Ollama Model",
+        pdf_mode: "PDF to Markdown / Text Mode",
+        pdf_mode_mineru: "MinerU pipeline Markdown (recommended: quality first)",
+        pdf_mode_auto: "Auto Select (fast first, then precise)",
+        pdf_mode_pymupdf4llm: "pymupdf4llm high-fidelity Markdown",
+        pdf_mode_pymupdf_text: "PyMuPDF plain text",
+        pdf_mode_pypdf_text: "pypdf plain text",
+        max_chars: "Max Upload Characters (0 = no truncation)",
+        llm_timeout: "LLM Timeout Seconds (0 = unlimited)",
+        bad_row_percent: "Bad Data Threshold (below this fill percent)",
+        ollama_url: "Ollama URL",
+        recursive: "Process Subfolders Recursively",
+        auto_fallback: "Try backup model when model fails",
+        start: "Start",
+        pause: "Pause",
+        resume: "Resume",
+        stop: "Stop",
+        api_config: "Edit LLM API Config",
+        service_name: "LLM Service Name",
+        placeholder_service: "e.g. silicon / deepseek / openrouter",
+        model_name: "Model Name",
+        load_cloud_models: "Load Cloud Models",
+        cloud_active: "Activate this config (required for cloud mode)",
+        save_local_config: "Save Local Config",
+        refresh_models: "Refresh Models",
+        api_help: "Compatible with SiliconFlow, DeepSeek, OpenRouter and other OpenAI-compatible APIs. The repository contains no real Key; you can enter and save it locally to config.local.json. Logs and Excel never record the Key.",
+        progress: "Progress",
+        stat_done: "Done",
+        stat_total: "Total",
+        stat_success: "Success",
+        stat_failed: "Failed",
+        status_waiting: "Waiting",
+        logs: "Run Logs",
+        fields: "Extraction Fields",
+        field_name: "Field Name",
+        requirement: "Requirement",
+        field_desc: "Field Description",
+        sort: "Order",
+        add_field: "Add Field",
+        reset_fields: "Reset Defaults",
+        fields_help: "Note: the backend infers output format from field names and descriptions; required fields ask the AI to search first and extract with maximum effort.",
+        placeholder_field_label: "e.g. catalyst",
+        placeholder_field_desc: "Tell the model what to extract for this field",
+        req_required: "Required",
+        req_recommended: "Recommended",
+        req_optional: "Optional",
+        move_up: "Up",
+        move_down: "Down",
+        remove: "Del",
+        error_model_read: "Failed to read model list",
+        error_ollama_read: "Unable to read Ollama models: ",
+        alert_fill_cloud: "Please fill in LLM BASE URL and LLM API KEY first.",
+        error_cloud_read: "Failed to read cloud models",
+        alert_cloud_read_done: "Cloud models loaded: ",
+        alert_cloud_read_unit: ".",
+        alert_cloud_read_failed: "Unable to read cloud models: ",
+        error_save_failed: "Save failed",
+        alert_config_saved: "Saved to local config.local.json. This file is in .gitignore and should not be uploaded to GitHub.",
+        alert_config_save_failed: "Failed to save local config: ",
+        alert_cloud_active: "Please check \"Activate this config\" before using the cloud API.",
+        alert_start_failed: "Start failed",
+        prefix_current_file: "Current file: ",
+        prefix_output: "Output: ",
+        prefix_error_log: "Error log: ",
+        error_local_service: "Unable to connect to local service."
+      }
+    };
+    let currentLang = localStorage.getItem("chemPdfExtractorLang") || "zh";
+
+    function t(key) {
+      return (i18n[currentLang] && i18n[currentLang][key]) || i18n.zh[key] || key;
+    }
+
+    function applyFieldLanguage() {
+      document.querySelectorAll("#fieldsBody tr").forEach(row => {
+        const label = row.querySelector(".label");
+        const desc = row.querySelector(".desc");
+        if (label) label.placeholder = t("placeholder_field_label");
+        if (desc) desc.placeholder = t("placeholder_field_desc");
+        const options = row.querySelectorAll(".requirement-select option");
+        if (options[0]) options[0].textContent = t("req_required");
+        if (options[1]) options[1].textContent = t("req_recommended");
+        if (options[2]) options[2].textContent = t("req_optional");
+        const buttons = row.querySelectorAll(".mini-btn");
+        if (buttons[0]) {
+          buttons[0].textContent = t("move_up");
+          buttons[0].title = t("move_up");
+        }
+        if (buttons[1]) {
+          buttons[1].textContent = t("move_down");
+          buttons[1].title = t("move_down");
+        }
+        const remove = row.querySelector(".remove button");
+        if (remove) remove.textContent = t("remove");
+      });
+    }
+
+    function applyLanguage() {
+      document.documentElement.lang = currentLang === "zh" ? "zh-CN" : "en";
+      document.querySelectorAll("[data-i18n]").forEach(el => {
+        el.textContent = t(el.dataset.i18n);
+      });
+      document.querySelectorAll("[data-i18n-placeholder]").forEach(el => {
+        el.placeholder = t(el.dataset.i18nPlaceholder);
+      });
+      document.getElementById("langZh").classList.toggle("active", currentLang === "zh");
+      document.getElementById("langEn").classList.toggle("active", currentLang === "en");
+      applyFieldLanguage();
+    }
+
+    function setLanguage(lang) {
+      currentLang = lang === "en" ? "en" : "zh";
+      localStorage.setItem("chemPdfExtractorLang", currentLang);
+      applyLanguage();
+    }
 
     function fieldRow(field = {label: "", requirement: "optional", description: ""}) {
       const tr = document.createElement("tr");
       tr.innerHTML = `
-        <td><input class="field-input label" value="${escapeHtml(field.label || "")}" placeholder="例如：催化剂" /></td>
+        <td><input class="field-input label" value="${escapeHtml(field.label || "")}" placeholder="${t("placeholder_field_label")}" /></td>
         <td class="requirement">
           <select class="field-input requirement-select">
-            <option value="required">必填</option>
-            <option value="recommended">建议</option>
-            <option value="optional">选填</option>
+            <option value="required">${t("req_required")}</option>
+            <option value="recommended">${t("req_recommended")}</option>
+            <option value="optional">${t("req_optional")}</option>
           </select>
         </td>
-        <td><textarea class="field-input desc" placeholder="告诉模型这个字段要提取什么">${escapeHtml(field.description || "")}</textarea></td>
+        <td><textarea class="field-input desc" placeholder="${t("placeholder_field_desc")}">${escapeHtml(field.description || "")}</textarea></td>
         <td class="move">
-          <button type="button" class="mini-btn" title="上移" onclick="moveField(this, -1)">上</button>
-          <button type="button" class="mini-btn" title="下移" onclick="moveField(this, 1)">下</button>
+          <button type="button" class="mini-btn" title="${t("move_up")}" onclick="moveField(this, -1)">${t("move_up")}</button>
+          <button type="button" class="mini-btn" title="${t("move_down")}" onclick="moveField(this, 1)">${t("move_down")}</button>
         </td>
-        <td class="remove"><button onclick="removeField(this)">删</button></td>
+        <td class="remove"><button onclick="removeField(this)">${t("remove")}</button></td>
       `;
       tr.querySelector(".requirement-select").value = field.requirement || "optional";
       return tr;
@@ -3240,7 +3504,7 @@ HTML_PAGE = r"""<!doctype html>
       try {
         const res = await fetch("/api/models?base_url=" + encodeURIComponent(baseUrl));
         const data = await res.json();
-        if (!data.ok) throw new Error(data.error || "模型读取失败");
+        if (!data.ok) throw new Error(data.error || t("error_model_read"));
         data.models.forEach(name => {
           const opt = document.createElement("option");
           opt.value = name;
@@ -3253,7 +3517,7 @@ HTML_PAGE = r"""<!doctype html>
         opt.value = defaults.model;
         opt.textContent = defaults.model;
         select.appendChild(opt);
-        alert("无法读取 Ollama 模型：" + err.message);
+        alert(t("error_ollama_read") + err.message);
       }
     }
 
@@ -3277,7 +3541,7 @@ HTML_PAGE = r"""<!doctype html>
       const modelSelect = document.getElementById("cloudModel");
       const previousModel = modelSelect.value;
       if (!baseUrl || !apiKey) {
-        alert("请先填写 LLM BASE URL 和 LLM API KEY。");
+        alert(t("alert_fill_cloud"));
         return;
       }
       try {
@@ -3287,14 +3551,14 @@ HTML_PAGE = r"""<!doctype html>
           body: JSON.stringify({base_url: baseUrl, api_key: apiKey})
         });
         const data = await res.json();
-        if (!data.ok) throw new Error(data.error || "云端模型读取失败");
+        if (!data.ok) throw new Error(data.error || t("error_cloud_read"));
         fillCloudModelSuggestions(data.models || [], previousModel);
         if (data.default_model && (data.models || []).includes(data.default_model) && !previousModel) {
           modelSelect.value = data.default_model;
         }
-        alert("已读取云端模型：" + (data.models || []).length + " 个。");
+        alert(t("alert_cloud_read_done") + (data.models || []).length + t("alert_cloud_read_unit"));
       } catch (err) {
-        alert("无法读取云端模型：" + err.message);
+        alert(t("alert_cloud_read_failed") + err.message);
       }
     }
 
@@ -3313,10 +3577,10 @@ HTML_PAGE = r"""<!doctype html>
           body: JSON.stringify(payload)
         });
         const data = await res.json();
-        if (!data.ok) throw new Error(data.error || "保存失败");
-        alert("已保存到本地 config.local.json。该文件已加入 .gitignore，不应上传 GitHub。");
+        if (!data.ok) throw new Error(data.error || t("error_save_failed"));
+        alert(t("alert_config_saved"));
       } catch (err) {
-        alert("本地配置保存失败：" + err.message);
+        alert(t("alert_config_save_failed") + err.message);
       }
     }
 
@@ -3330,7 +3594,7 @@ HTML_PAGE = r"""<!doctype html>
     async function startJob() {
       const provider = document.getElementById("llmProvider").value;
       if (provider === "cloud" && !document.getElementById("cloudActive").checked) {
-        alert("请先勾选“激活此配置”，再使用云端 API。");
+        alert(t("alert_cloud_active"));
         return;
       }
       const selectedModel = provider === "cloud"
@@ -3359,7 +3623,7 @@ HTML_PAGE = r"""<!doctype html>
       };
       const res = await fetch("/api/start", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(payload)});
       const data = await res.json();
-      if (!data.ok) alert(data.error || "启动失败");
+      if (!data.ok) alert(data.error || t("alert_start_failed"));
       pollStatus();
     }
 
@@ -3387,16 +3651,16 @@ HTML_PAGE = r"""<!doctype html>
         document.getElementById("total").textContent = data.total || 0;
         document.getElementById("success").textContent = data.success || 0;
         document.getElementById("failed").textContent = data.failed || 0;
-        document.getElementById("message").textContent = data.message || "";
-        document.getElementById("currentFile").textContent = data.current_file ? "当前文件：" + data.current_file : "";
-        document.getElementById("outputInfo").textContent = data.output_path ? "输出：" + data.output_path + " | 错误日志：" + data.error_log_path : "";
+        document.getElementById("message").textContent = data.message || t("status_waiting");
+        document.getElementById("currentFile").textContent = data.current_file ? t("prefix_current_file") + data.current_file : "";
+        document.getElementById("outputInfo").textContent = data.output_path ? t("prefix_output") + data.output_path + " | " + t("prefix_error_log") + data.error_log_path : "";
         document.getElementById("logs").textContent = (data.logs || []).join("\n");
         document.getElementById("startBtn").disabled = !!data.running;
         document.getElementById("stopBtn").disabled = !data.running;
         document.getElementById("pauseBtn").disabled = !data.running || !!data.pause_requested;
         document.getElementById("resumeBtn").disabled = !data.running || !data.pause_requested;
       } catch (err) {
-        document.getElementById("message").textContent = "无法连接本地服务。";
+        document.getElementById("message").textContent = t("error_local_service");
       }
     }
 
@@ -3416,6 +3680,7 @@ HTML_PAGE = r"""<!doctype html>
       document.getElementById("llmTimeout").value = "0";
       document.getElementById("badRowMinFillPercent").value = defaults.bad_row_min_fill_percent;
       resetFields();
+      applyLanguage();
       onProviderChange();
       loadModels();
       pollStatus();
